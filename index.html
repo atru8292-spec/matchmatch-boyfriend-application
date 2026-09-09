@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Boyfriend Application — MatchMatch</title>
+<meta name="description" content="Tell us about yourself and let's find out if we're a good match." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div class="lang-switch" role="group" aria-label="Language">
+  <button type="button" class="lang-btn" data-lang="en">EN</button>
+  <button type="button" class="lang-btn" data-lang="es">ES</button>
+</div>
+
+<div class="progress" aria-hidden="true">
+  <div class="progress__fill" id="progressFill"></div>
+</div>
+
+<main class="page">
+
+  <!-- INTRO -->
+  <section class="step step--intro" data-step="0" data-active="true">
+    <div class="hero">
+      <div class="hero__image"></div>
+      <div class="hero__person">
+        <div class="hero__avatar"><img src="anya.jpg" alt="" onerror="this.style.display='none'"></div>
+        <div class="hero__person-text">
+          <p class="hero__name">Anna Vorobeva</p>
+          <p class="hero__role" data-i18n="hero_role">MatchMatch · Founder</p>
+        </div>
+      </div>
+    </div>
+    <div class="intro__body">
+      <p class="eyebrow" data-i18n="eyebrow_city">Mexico City</p>
+      <h1><span data-i18n="hero_title_1">Boyfriend</span><br><em data-i18n="hero_title_2">Application</em></h1>
+      <p class="lede" data-i18n="lede_intro">So, you think we could be a good match? Tell me about yourself, honestly and in your own words, and let's find out.</p>
+      <button type="button" class="btn btn--primary" data-next data-i18n="btn_start">Start the application</button>
+    </div>
+  </section>
+
+  <form id="appForm" novalidate>
+
+    <!-- STEP 1 — GENERAL INFO -->
+    <section class="step" data-step="1">
+      <header class="step__header">
+        <p class="step__count" data-i18n="step_count_1">Step 1 of 5</p>
+        <h2 data-i18n="step_title_1">General info</h2>
+      </header>
+
+      <div class="field">
+        <label for="full_name" data-i18n="full_name_label">What's your full name?</label>
+        <input type="text" id="full_name" name="full_name" required>
+      </div>
+
+      <div class="field">
+        <label for="instagram" data-i18n="instagram_label">What's your Instagram?</label>
+        <input type="text" id="instagram" name="instagram" placeholder="@username" required>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="age" data-i18n="age_label">How old are you?</label>
+          <input type="number" id="age" name="age" min="18" max="99" required>
+        </div>
+        <div class="field">
+          <label for="height_cm" data-i18n="height_label">How tall are you? (cm)</label>
+          <input type="number" id="height_cm" name="height_cm" min="140" max="220" required>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="city" data-i18n="city_label">Where do you live?</label>
+        <input type="text" id="city" name="city" placeholder="City / neighborhood" data-i18n-placeholder="city_ph" required>
+      </div>
+
+      <div class="field">
+        <label for="living_situation" data-i18n="living_situation_label">What's your current living situation?</label>
+        <select id="living_situation" name="living_situation" required>
+          <option value="" disabled selected hidden>Select one</option>
+          <option value="Living alone">Living alone</option>
+          <option value="Living with roommates">Living with roommates</option>
+          <option value="Living with family">Living with family</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="smoke" data-i18n="smoke_label">Do you smoke?</label>
+          <select id="smoke" name="smoke" required>
+            <option value="" disabled selected hidden>Select one</option>
+            <option value="Yes">Yes</option>
+            <option value="Sometimes">Sometimes</option>
+            <option value="Trying to quit">Trying to quit</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="drink" data-i18n="drink_label">Do you drink?</label>
+          <select id="drink" name="drink" required>
+            <option value="" disabled selected hidden>Select one</option>
+            <option value="Yes">Yes</option>
+            <option value="Sometimes">Sometimes</option>
+            <option value="Trying to quit">Trying to quit</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="religious" data-i18n="religious_label">Are you religious?</label>
+        <select id="religious" name="religious" required>
+          <option value="" disabled selected hidden>Select one</option>
+          <option value="Not religious / atheist">Not religious / atheist</option>
+          <option value="Agnostic">Agnostic</option>
+          <option value="Spiritual but not religious">Spiritual but not religious</option>
+          <option value="Christian — Catholic">Christian — Catholic</option>
+          <option value="Christian — Protestant">Christian — Protestant</option>
+          <option value="Christian — Orthodox">Christian — Orthodox</option>
+          <option value="Christian — other">Christian — other</option>
+          <option value="Jewish">Jewish</option>
+          <option value="Muslim">Muslim</option>
+          <option value="Buddhist">Buddhist</option>
+          <option value="Hindu">Hindu</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="religious_detail" data-i18n="religious_detail_label">If relevant — how much does it shape your everyday life? (optional)</label>
+        <textarea id="religious_detail" name="religious_detail" rows="3" placeholder="Values, lifestyle, holidays, how you'd raise kids — whatever's actually true for you" data-i18n-placeholder="religious_detail_ph"></textarea>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="has_kids" data-i18n="has_kids_label">Do you have kids?</label>
+          <select id="has_kids" name="has_kids" required>
+            <option value="" disabled selected hidden>Select one</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="wants_kids" data-i18n="wants_kids_label">Do you want to have kids?</label>
+          <select id="wants_kids" name="wants_kids" required>
+            <option value="" disabled selected hidden>Select one</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+            <option value="Maybe">Maybe</option>
+            <option value="Not sure yet">Not sure yet</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="political_views" data-i18n="political_views_label">What are your political views?</label>
+        <select id="political_views" name="political_views">
+          <option value="" disabled selected hidden>Select one</option>
+          <option value="Apolitical">Apolitical</option>
+          <option value="Moderate">Moderate</option>
+          <option value="Left">Left</option>
+          <option value="Right">Right</option>
+          <option value="Socialist">Socialist</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="occupation" data-i18n="occupation_label">What is your current job title or occupation?</label>
+        <input type="text" id="occupation" name="occupation" required>
+      </div>
+
+      <div class="field">
+        <label for="income_usd" data-i18n="income_label">What is your approximate monthly income? (USD)</label>
+        <select id="income_usd" name="income_usd" required>
+          <option value="" disabled selected hidden>Select one</option>
+          <option value="Under $1,000">Under $1,000</option>
+          <option value="$1,000 – $2,500">$1,000 – $2,500</option>
+          <option value="$2,500 – $5,000">$2,500 – $5,000</option>
+          <option value="$5,000 – $10,000">$5,000 – $10,000</option>
+          <option value="$10,000 – $20,000">$10,000 – $20,000</option>
+          <option value="$20,000+">$20,000+</option>
+          <option value="Prefer not to say">Prefer not to say</option>
+        </select>
+      </div>
+
+      <div class="step__nav">
+        <button type="button" class="btn btn--ghost" data-prev data-i18n="btn_back">Back</button>
+        <button type="button" class="btn btn--primary" data-next data-i18n="btn_continue">Continue</button>
+      </div>
+    </section>
+
+    <!-- STEP 2 — RELATIONSHIP -->
+    <section class="step" data-step="2">
+      <header class="step__header">
+        <p class="step__count" data-i18n="step_count_2">Step 2 of 5</p>
+        <h2 data-i18n="step_title_2">Relationship</h2>
+      </header>
+
+      <div class="field">
+        <label for="relationship_type" data-i18n="relationship_type_label">What kind of relationships you're looking for?</label>
+        <select id="relationship_type" name="relationship_type" required>
+          <option value="" disabled selected hidden>Select one</option>
+          <option value="Long-term relationship / marriage">Long-term relationship / marriage</option>
+          <option value="Serious relationship, not rushing marriage">Serious relationship, not rushing marriage</option>
+          <option value="Casual, open to see where it goes">Casual, open to see where it goes</option>
+          <option value="Not sure yet">Not sure yet</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="relationship_vision" data-i18n="relationship_vision_label">How do you see this kind of relationship you're looking for?</label>
+        <textarea name="relationship_vision" id="relationship_vision" rows="3" placeholder="Tell me what this relationship would look like in your everyday life – how you spend time together, whether you live together, and anything else that feels important to you." data-i18n-placeholder="relationship_vision_ph" required></textarea>
+      </div>
+
+      <div class="field">
+        <label for="finances_handling" data-i18n="finances_handling_label">How do you prefer to handle finances in a relationship?</label>
+        <select id="finances_handling" name="finances_handling" required>
+          <option value="" disabled selected hidden>Select one</option>
+          <option value="The man takes full financial responsibility">The man takes full financial responsibility</option>
+          <option value="The man provides, but expects the woman to contribute financially too">The man provides, but expects the woman to contribute financially too</option>
+          <option value="Both partners split expenses equally (50/50)">Both partners split expenses equally (50/50)</option>
+          <option value="Both partners contribute proportionally to their income">Both partners contribute proportionally to their income</option>
+          <option value="Each partner keeps their finances separate">Each partner keeps their finances separate</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="finances_detail" data-i18n="finances_detail_label">Tell me more about your preferred financial arrangement.</label>
+        <textarea id="finances_detail" name="finances_detail" rows="3" placeholder="What does it look like in practice, especially as the relationship becomes more serious?" data-i18n-placeholder="finances_detail_ph" required></textarea>
+      </div>
+
+      <div class="field">
+        <label for="gender_roles" data-i18n="gender_roles_label">How do you see the roles of a man and a woman in a relationship?</label>
+        <textarea id="gender_roles" name="gender_roles" rows="3" placeholder="Are there any roles, responsibilities, or expectations that you consider important?" data-i18n-placeholder="gender_roles_ph" required></textarea>
+      </div>
+
+      <div class="field">
+        <label for="good_partner_meaning" data-i18n="good_partner_meaning_label">What does being a good partner mean to you?</label>
+        <textarea id="good_partner_meaning" name="good_partner_meaning" rows="3" required></textarea>
+      </div>
+
+      <div class="field">
+        <label for="what_makes_you_great" data-i18n="what_makes_you_great_label">What makes you a great partner?</label>
+        <textarea id="what_makes_you_great" name="what_makes_you_great" rows="3" required></textarea>
+      </div>
+
+      <div class="field">
+        <label for="looking_for_partner" data-i18n="looking_for_partner_label">What are you looking for in a partner?</label>
+        <textarea id="looking_for_partner" name="looking_for_partner" rows="3" required></textarea>
+      </div>
+
+      <div class="field">
+        <label for="show_care" data-i18n="show_care_label">How do you like to show care and generosity in a relationship?</label>
+        <textarea id="show_care" name="show_care" rows="3" required></textarea>
+      </div>
+
+      <div class="field">
+        <label for="why_good_match" data-i18n="why_good_match_label">Why do you think we'd be a good match?</label>
+        <textarea id="why_good_match" name="why_good_match" rows="3" required></textarea>
+      </div>
+
+      <div class="field">
+        <label for="non_negotiables" data-i18n="non_negotiables_label">What are your non-negotiables in a relationship?</label>
+        <textarea id="non_negotiables" name="non_negotiables" rows="3" required></textarea>
+      </div>
+
+      <div class="field">
+        <label for="conflict_handling" data-i18n="conflict_handling_label">How do you usually handle conflict in a relationship?</label>
+        <textarea id="conflict_handling" name="conflict_handling" rows="3" required></textarea>
+      </div>
+
+      <div class="field">
+        <label for="cheating_definition" data-i18n="cheating_definition_label">What would you consider cheating in a relationship?</label>
+        <textarea id="cheating_definition" name="cheating_definition" rows="3" required></textarea>
+      </div>
+
+      <div class="field">
+        <label for="communication_skill" data-i18n="communication_skill_label">How good are you at communication in a relationship?</label>
+        <div class="slider">
+          <input type="range" id="communication_skill" name="communication_skill" min="0" max="10" value="5">
+          <output for="communication_skill" id="communication_skill_out">5</output>
+        </div>
+        <div class="slider__scale"><span>0</span><span>10</span></div>
+      </div>
+
+      <div class="step__nav">
+        <button type="button" class="btn btn--ghost" data-prev data-i18n="btn_back">Back</button>
+        <button type="button" class="btn btn--primary" data-next data-i18n="btn_continue">Continue</button>
+      </div>
+    </section>
+
+    <!-- STEP 3 — PERSONALITY -->
+    <section class="step" data-step="3">
+      <header class="step__header">
+        <p class="step__count" data-i18n="step_count_3">Step 3 of 5</p>
+        <h2 data-i18n="step_title_3">Personality</h2>
+      </header>
+
+      <div class="field">
+        <label for="life_focus" data-i18n="life_focus_label">What are you currently focused on in life outside of a relationship?</label>
+        <textarea id="life_focus" name="life_focus" rows="3" placeholder="Tell me about the goals, projects, experiences, or personal growth you're currently focused on." data-i18n-placeholder="life_focus_ph" required></textarea>
+      </div>
+
+      <div class="field">
+        <label for="parents_relationship" data-i18n="parents_relationship_label">How would you describe relationships with your parents?</label>
+        <textarea id="parents_relationship" name="parents_relationship" rows="3" placeholder="Tell me a little about how your relationship looks today and how involved you are in each other's lives." data-i18n-placeholder="parents_relationship_ph" required></textarea>
+      </div>
+
+      <div class="field">
+        <label for="last_relationship_ended" data-i18n="last_relationship_ended_label">When did your last serious relationship end, and why?</label>
+        <textarea id="last_relationship_ended" name="last_relationship_ended" rows="3" required></textarea>
+      </div>
+
+      <div class="field">
+        <label for="therapy" data-i18n="therapy_label">Have you been in therapy?</label>
+        <select id="therapy" name="therapy" required>
+          <option value="" disabled selected hidden>Select one</option>
+          <option value="Yes">Yes</option>
+          <option value="No">No</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="improving_self" data-i18n="improving_self_label">What's one thing you're currently working on improving in yourself?</label>
+        <textarea id="improving_self" name="improving_self" rows="3" required></textarea>
+      </div>
+
+      <div class="field">
+        <label data-i18n="love_give_label">What are your love languages? How do you usually show love?</label>
+        <div class="checks">
+          <label class="check"><input type="checkbox" name="love_language_give" value="Words of affirmation"><span>Words of affirmation</span></label>
+          <label class="check"><input type="checkbox" name="love_language_give" value="Quality time"><span>Quality time</span></label>
+          <label class="check"><input type="checkbox" name="love_language_give" value="Acts of service"><span>Acts of service</span></label>
+          <label class="check"><input type="checkbox" name="love_language_give" value="Physical touch"><span>Physical touch</span></label>
+          <label class="check"><input type="checkbox" name="love_language_give" value="Gift giving"><span>Gift giving</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label data-i18n="love_receive_label">What are your love languages? How do you feel loved?</label>
+        <div class="checks">
+          <label class="check"><input type="checkbox" name="love_language_receive" value="Words of affirmation"><span>Words of affirmation</span></label>
+          <label class="check"><input type="checkbox" name="love_language_receive" value="Quality time"><span>Quality time</span></label>
+          <label class="check"><input type="checkbox" name="love_language_receive" value="Acts of service"><span>Acts of service</span></label>
+          <label class="check"><input type="checkbox" name="love_language_receive" value="Physical touch"><span>Physical touch</span></label>
+          <label class="check"><input type="checkbox" name="love_language_receive" value="Gift giving"><span>Gift giving</span></label>
+        </div>
+      </div>
+
+      <div class="step__nav">
+        <button type="button" class="btn btn--ghost" data-prev data-i18n="btn_back">Back</button>
+        <button type="button" class="btn btn--primary" data-next data-i18n="btn_continue">Continue</button>
+      </div>
+    </section>
+
+    <!-- STEP 4 — LIFESTYLE -->
+    <section class="step" data-step="4">
+      <header class="step__header">
+        <p class="step__count" data-i18n="step_count_4">Step 4 of 5</p>
+        <h2 data-i18n="step_title_4">Lifestyle</h2>
+      </header>
+
+      <div class="field">
+        <label data-i18n="values_label">Which of these values matter most to you in life?</label>
+        <div class="checks">
+          <label class="check"><input type="checkbox" name="values" value="Family"><span>Family</span></label>
+          <label class="check"><input type="checkbox" name="values" value="Financial security"><span>Financial security</span></label>
+          <label class="check"><input type="checkbox" name="values" value="Career &amp; ambition"><span>Career &amp; ambition</span></label>
+          <label class="check"><input type="checkbox" name="values" value="Freedom &amp; independence"><span>Freedom &amp; independence</span></label>
+          <label class="check"><input type="checkbox" name="values" value="Love &amp; partnership"><span>Love &amp; partnership</span></label>
+          <label class="check"><input type="checkbox" name="values" value="Personal growth"><span>Personal growth</span></label>
+          <label class="check"><input type="checkbox" name="values" value="Health &amp; wellbeing"><span>Health &amp; wellbeing</span></label>
+          <label class="check"><input type="checkbox" name="values" value="Peace of mind"><span>Peace of mind</span></label>
+          <label class="check"><input type="checkbox" name="values" value="Spirituality / faith"><span>Spirituality / faith</span></label>
+          <label class="check"><input type="checkbox" name="values" value="Community &amp; friends"><span>Community &amp; friends</span></label>
+          <label class="check"><input type="checkbox" name="values" value="Creativity"><span>Creativity</span></label>
+          <label class="check"><input type="checkbox" name="values" value="Fun &amp; enjoying life"><span>Fun &amp; enjoying life</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="values_other" data-i18n="values_other_label">Anything else that matters deeply to you?</label>
+        <textarea id="values_other" name="values_other" rows="3"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="typical_week" data-i18n="typical_week_label">What does your typical week look like?</label>
+        <textarea id="typical_week" name="typical_week" rows="3" required></textarea>
+      </div>
+
+      <div class="field">
+        <label for="ideal_weekend" data-i18n="ideal_weekend_label">What's your ideal way to spend a weekend together?</label>
+        <select id="ideal_weekend" name="ideal_weekend" required>
+          <option value="" disabled selected hidden>Select one</option>
+          <option value="Trying a new restaurant, museum, concert etc">Trying a new restaurant, museum, concert etc</option>
+          <option value="Movie night at home">Movie night at home</option>
+          <option value="Outdoor adventure">Outdoor adventure</option>
+          <option value="A road trip / exploring somewhere by car">A road trip / exploring somewhere by car</option>
+          <option value="Something spontaneous and unplanned">Something spontaneous and unplanned</option>
+          <option value="Spa day, rooftop pool, or other wellness experience">Spa day, rooftop pool, or other wellness experience</option>
+          <option value="A beach or resort getaway">A beach or resort getaway</option>
+          <option value="Getting dressed up and going somewhere special">Getting dressed up and going somewhere special</option>
+          <option value="Hang out with our friends and family">Hang out with our friends and family</option>
+        </select>
+      </div>
+
+      <div class="step__nav">
+        <button type="button" class="btn btn--ghost" data-prev data-i18n="btn_back">Back</button>
+        <button type="button" class="btn btn--primary" data-next data-i18n="btn_continue">Continue</button>
+      </div>
+    </section>
+
+    <!-- STEP 5 — PHOTOS & VIDEO -->
+    <section class="step" data-step="5">
+      <header class="step__header">
+        <p class="step__count" data-i18n="step_count_5">Step 5 of 5</p>
+        <h2 data-i18n="step_title_5">Photos &amp; video</h2>
+      </header>
+
+      <div class="field">
+        <label for="portrait_photo" data-i18n="portrait_label">Upload your best latest portrait photo</label>
+        <div class="upload" data-upload>
+          <input type="file" id="portrait_photo" name="portrait_photo" accept="image/*" required>
+          <div class="upload__zone">
+            <span class="upload__text" data-i18n="upload_click">Click to choose a file or drag here</span>
+            <span class="upload__hint" data-i18n="upload_hint_10">Size limit: 10 MB</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="fulllength_photo" data-i18n="fulllength_label">Upload your best latest full-length photo</label>
+        <div class="upload" data-upload>
+          <input type="file" id="fulllength_photo" name="fulllength_photo" accept="image/*" required>
+          <div class="upload__zone">
+            <span class="upload__text" data-i18n="upload_click">Click to choose a file or drag here</span>
+            <span class="upload__hint" data-i18n="upload_hint_10">Size limit: 10 MB</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="intro_video" data-i18n="video_label">Leave a short video introduction (optional)</label>
+        <div class="upload" data-upload>
+          <input type="file" id="intro_video" name="intro_video" accept="video/*">
+          <div class="upload__zone">
+            <span class="upload__text" data-i18n="upload_click">Click to choose a file or drag here</span>
+            <span class="upload__hint" data-i18n="upload_hint_200">Size limit: 200 MB</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="error" id="formError" role="alert" hidden></p>
+
+      <div class="step__nav">
+        <button type="button" class="btn btn--ghost" data-prev data-i18n="btn_back">Back</button>
+        <button type="submit" class="btn btn--primary" id="submitBtn" data-i18n="btn_submit">Submit application</button>
+      </div>
+    </section>
+
+  </form>
+
+  <!-- DONE -->
+  <section class="step step--done" data-step="6">
+    <div class="intro__body">
+      <p class="eyebrow" data-i18n="done_eyebrow">Application received</p>
+      <h1><span data-i18n="done_title_1">Thank</span> <em data-i18n="done_title_2">you</em></h1>
+      <p class="lede" data-i18n="done_lede">Your application is in. Anya reviews every submission personally — if it looks like a good fit, you'll hear from her directly.</p>
+    </div>
+  </section>
+
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

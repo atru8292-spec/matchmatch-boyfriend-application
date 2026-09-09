@@ -1,0 +1,13 @@
+{
+  "name": "boyfriend-application",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MatchMatch — Boyfriend Application Form (static form + Vercel serverless backend: Google Sheets + Drive + Telegram)",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "formidable": "^3.5.1",
+    "googleapis": "^140.0.1"
+  }
+}
