@@ -7,7 +7,6 @@
     "dev": "vercel dev"
   },
   "dependencies": {
-    "formidable": "^3.5.1",
     "googleapis": "^140.0.1"
   }
 }

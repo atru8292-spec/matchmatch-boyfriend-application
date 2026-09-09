@@ -329,7 +329,63 @@
     current = index;
     progressFill.style.width = (index / TOTAL) * 100 + "%";
     window.scrollTo({ top: 0, behavior: "smooth" });
+    saveDraft();
   }
+
+  /* ---------------- draft autosave ---------------- */
+
+  var DRAFT_KEY = "mm_boyfriend_draft";
+
+  function saveDraft() {
+    try {
+      var data = {};
+      Array.from(form.elements).forEach(function (el) {
+        if (!el.name || el.type === "file") return;
+        if (el.type === "checkbox") {
+          if (!el.checked) return;
+          if (!Array.isArray(data[el.name])) data[el.name] = [];
+          data[el.name].push(el.value);
+          return;
+        }
+        data[el.name] = el.value;
+      });
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ step: current, fields: data }));
+    } catch (e) {}
+  }
+
+  function restoreDraft() {
+    var raw;
+    try { raw = localStorage.getItem(DRAFT_KEY); } catch (e) { return; }
+    if (!raw) return;
+    var draft;
+    try { draft = JSON.parse(raw); } catch (e) { return; }
+    if (!draft || !draft.fields) return;
+
+    Object.keys(draft.fields).forEach(function (name) {
+      var value = draft.fields[name];
+      var els = form.querySelectorAll('[name="' + name + '"]');
+      if (!els.length) return;
+      if (els[0].type === "checkbox") {
+        var arr = Array.isArray(value) ? value : [value];
+        els.forEach(function (el) { el.checked = arr.indexOf(el.value) !== -1; });
+        return;
+      }
+      els[0].value = value;
+    });
+
+    if (sliderOut && slider) sliderOut.textContent = slider.value;
+
+    if (typeof draft.step === "number" && draft.step >= 0 && draft.step <= TOTAL) {
+      showStep(draft.step);
+    }
+  }
+
+  function clearDraft() {
+    try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+  }
+
+  form.addEventListener("input", saveDraft);
+  form.addEventListener("change", saveDraft);
 
   function fieldsInStep(index) {
     var el = steps.find(function (s) { return Number(s.dataset.step) === index; });
@@ -398,6 +454,59 @@
     errorBox.textContent = "";
   }
 
+  var cachedAccessToken = null;
+
+  function getAccessToken() {
+    if (cachedAccessToken) return Promise.resolve(cachedAccessToken);
+    return fetch("/api/token")
+      .then(function (res) {
+        if (!res.ok) throw new Error("token_failed");
+        return res.json();
+      })
+      .then(function (data) {
+        cachedAccessToken = data.accessToken;
+        return cachedAccessToken;
+      });
+  }
+
+  function uploadFileDirectly(folderId, file) {
+    if (!file) return Promise.resolve("");
+    return getAccessToken().then(function (token) {
+      // 1. Browser itself initiates the resumable session — Google only
+      // returns CORS headers on the follow-up PUT when the session was
+      // started with the browser's real Origin header.
+      return fetch(
+        "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&supportsAllDrives=true",
+        {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + token,
+            "Content-Type": "application/json; charset=UTF-8",
+            "X-Upload-Content-Type": file.type || "application/octet-stream",
+          },
+          body: JSON.stringify({ name: file.name, parents: [folderId] }),
+        }
+      )
+        .then(function (initRes) {
+          if (!initRes.ok) throw new Error("upload_session_failed");
+          var uploadUrl = initRes.headers.get("location");
+          if (!uploadUrl) throw new Error("no_upload_url");
+          return fetch(uploadUrl, {
+            method: "PUT",
+            headers: { "Content-Type": file.type || "application/octet-stream" },
+            body: file,
+          });
+        })
+        .then(function (res) {
+          if (!res.ok) throw new Error("upload_failed");
+          return res.json();
+        })
+        .then(function (fileData) {
+          return fileData.webViewLink || ("https://drive.google.com/file/d/" + fileData.id + "/view");
+        });
+    });
+  }
+
   form.addEventListener("submit", function (e) {
     e.preventDefault();
     clearError();
@@ -405,13 +514,59 @@
     if (!validateStep(5)) return;
 
     var data = new FormData(form);
+    var fullName = data.get("full_name") || "Unnamed";
+
+    var portraitFile = data.get("portrait_photo");
+    var fulllengthFile = data.get("fulllength_photo");
+    var videoFile = data.get("intro_video");
+
+    // build the text-only payload (skip file inputs, collect repeated
+    // checkbox keys like love_language_give/values into arrays)
+    var payload = {};
+    Array.from(form.elements).forEach(function (el) {
+      if (!el.name || el.type === "file") return;
+      if (el.type === "checkbox") {
+        if (!el.checked) return;
+        if (!Array.isArray(payload[el.name])) payload[el.name] = [];
+        payload[el.name].push(el.value);
+        return;
+      }
+      payload[el.name] = el.value;
+    });
 
     submitBtn.disabled = true;
     submitBtn.textContent = t("btn_sending");
 
-    fetch("/api/submit", { method: "POST", body: data })
+    fetch("/api/create-folder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: fullName }),
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error("create_folder_failed");
+        return res.json();
+      })
+      .then(function (folder) {
+        payload.folderLink = folder.folderLink;
+        return Promise.all([
+          uploadFileDirectly(folder.folderId, portraitFile && portraitFile.size ? portraitFile : null),
+          uploadFileDirectly(folder.folderId, fulllengthFile && fulllengthFile.size ? fulllengthFile : null),
+          uploadFileDirectly(folder.folderId, videoFile && videoFile.size ? videoFile : null),
+        ]);
+      })
+      .then(function (links) {
+        payload.portraitLink = links[0];
+        payload.fulllengthLink = links[1];
+        payload.videoLink = links[2];
+        return fetch("/api/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      })
       .then(function (res) {
         if (!res.ok) throw new Error("Request failed: " + res.status);
+        clearDraft();
         showStep(6);
       })
       .catch(function (err) {
@@ -432,4 +587,5 @@
   applyLanguage(savedLang);
 
   showStep(0);
+  restoreDraft();
 })();
