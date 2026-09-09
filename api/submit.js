@@ -1,9 +1,4 @@
-const formidable = require("formidable");
-const fs = require("fs");
 const { google } = require("googleapis");
-
-// Vercel Node function — we parse the multipart body ourselves.
-module.exports.config = { api: { bodyParser: false } };
 
 const TEXT_FIELDS = [
   ["full_name", "Full name"],
@@ -58,18 +53,7 @@ function getGoogleAuth() {
   const key = (process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, "\n");
   return new google.auth.JWT(email, null, key, [
     "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive",
   ]);
-}
-
-async function uploadFile(drive, folderId, file, name) {
-  if (!file) return "";
-  const res = await drive.files.create({
-    requestBody: { name, parents: [folderId] },
-    media: { mimeType: file.mimetype || "application/octet-stream", body: fs.createReadStream(file.filepath) },
-    fields: "id, webViewLink",
-  });
-  return res.data.webViewLink || `https://drive.google.com/file/d/${res.data.id}/view`;
 }
 
 async function sendTelegram(text) {
@@ -97,53 +81,22 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const form = formidable({ multiples: true, maxFileSize: 250 * 1024 * 1024 });
-    const [fields, files] = await form.parse(req);
-
-    const flat = {};
-    for (const [key, value] of Object.entries(fields)) {
-      const isMulti = key === "love_language_give" || key === "love_language_receive" || key === "values";
-      flat[key] = Array.isArray(value) && value.length === 1 && !isMulti ? value[0] : value;
-    }
+    const body = req.body || {};
+    const { folderLink, portraitLink, fulllengthLink, videoLink } = body;
 
     const auth = getGoogleAuth();
     const sheets = google.sheets({ version: "v4", auth });
-    const drive = google.drive({ version: "v3", auth });
 
-    // 1. Create a per-applicant Drive subfolder for the photos/video
-    const parentFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
-    const applicantName = joinField(flat.full_name) || "Unnamed";
-    const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const folderRes = await drive.files.create({
-      requestBody: {
-        name: `${applicantName} — ${stamp}`,
-        mimeType: "application/vnd.google-apps.folder",
-        parents: [parentFolderId],
-      },
-      fields: "id, webViewLink",
-    });
-    const folderId = folderRes.data.id;
-    const folderLink = folderRes.data.webViewLink;
+    const applicantName = joinField(body.full_name) || "Unnamed";
 
-    const portraitFile = files.portrait_photo?.[0] || files.portrait_photo;
-    const fulllengthFile = files.fulllength_photo?.[0] || files.fulllength_photo;
-    const videoFile = files.intro_video?.[0] || files.intro_video;
-
-    const [portraitLink, fulllengthLink, videoLink] = await Promise.all([
-      uploadFile(drive, folderId, portraitFile, "portrait.jpg"),
-      uploadFile(drive, folderId, fulllengthFile, "fulllength.jpg"),
-      uploadFile(drive, folderId, videoFile, "intro_video.mp4"),
-    ]);
-
-    // 2. Append a row to the Google Sheet
     const sheetId = process.env.GOOGLE_SHEET_ID;
     const row = [
       new Date().toISOString(),
-      ...TEXT_FIELDS.map(([key]) => joinField(flat[key])),
-      portraitLink,
-      fulllengthLink,
-      videoLink,
-      folderLink,
+      ...TEXT_FIELDS.map(([key]) => joinField(body[key])),
+      portraitLink || "",
+      fulllengthLink || "",
+      videoLink || "",
+      folderLink || "",
     ];
     await sheets.spreadsheets.values.append({
       spreadsheetId: sheetId,
@@ -153,14 +106,13 @@ module.exports = async (req, res) => {
       requestBody: { values: [row] },
     });
 
-    // 3. Notify Telegram
     const summary = [
       `<b>New boyfriend application</b>`,
-      `${applicantName} · ${joinField(flat.age)} y/o · ${joinField(flat.city)}`,
-      `IG: ${joinField(flat.instagram)}`,
-      `Occupation: ${joinField(flat.occupation)}`,
+      `${applicantName} · ${joinField(body.age)} y/o · ${joinField(body.city)}`,
+      `IG: ${joinField(body.instagram)}`,
+      `Occupation: ${joinField(body.occupation)}`,
       ``,
-      `Photos & video: ${folderLink}`,
+      `Photos & video: ${folderLink || "—"}`,
     ].join("\n");
     await sendTelegram(summary);
 
