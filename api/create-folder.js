@@ -1,11 +1,12 @@
 const { google } = require("googleapis");
 
-function getGoogleAuth() {
-  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  const key = (process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, "\n");
-  return new google.auth.JWT(email, null, key, [
-    "https://www.googleapis.com/auth/drive",
-  ]);
+function getOAuthClient() {
+  const client = new google.auth.OAuth2(
+    process.env.GOOGLE_OAUTH_CLIENT_ID,
+    process.env.GOOGLE_OAUTH_CLIENT_SECRET
+  );
+  client.setCredentials({ refresh_token: process.env.GOOGLE_OAUTH_REFRESH_TOKEN });
+  return client;
 }
 
 module.exports = async (req, res) => {
@@ -15,7 +16,7 @@ module.exports = async (req, res) => {
   }
   try {
     const { name } = req.body || {};
-    const auth = getGoogleAuth();
+    const auth = getOAuthClient();
     const drive = google.drive({ version: "v3", auth });
     const parentFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");

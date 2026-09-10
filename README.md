@@ -24,8 +24,9 @@
 - `styles.css` — дизайн-токены + стили
 - `app.js` — навигация по шагам, валидация, прямая заливка в Drive, отправка
 - `api/create-folder.js` — создаёт подпапку заявки в Drive
-- `api/token.js` — выдаёт браузеру временный Google access token
-- `api/submit.js` — пишет в Google Sheets + шлёт в Telegram (только текст)
+- `api/token.js` — выдаёт браузеру временный Google access token (OAuth, не сервис-аккаунт — см. ниже почему)
+- `api/telegram-config.js` — отдаёт браузеру токен бота + chat_id, чтобы фото уходили в Telegram альбомом напрямую, в обход лимита Vercel на размер запроса
+- `api/submit.js` — пишет только в Google Sheets (Telegram теперь отправляется с клиента)
 - `vercel.json` — таймаут функций увеличен до 60 сек
 - `.env.example` — какие переменные окружения нужны
 

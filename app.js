@@ -507,6 +507,131 @@
     });
   }
 
+  var cachedTelegramConfig = null;
+
+  function getTelegramConfig() {
+    if (cachedTelegramConfig) return Promise.resolve(cachedTelegramConfig);
+    return fetch("/api/telegram-config")
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        cachedTelegramConfig = data;
+        return data;
+      });
+  }
+
+  function escapeHtml(str) {
+    return String(str || "").replace(/[&<>]/g, function (c) {
+      return c === "&" ? "&amp;" : c === "<" ? "&lt;" : "&gt;";
+    });
+  }
+
+  // Sends the application to Telegram as a real photo album (not just a
+  // link) — fire-and-forget: a failure here never blocks the "thank you"
+  // screen, since the application is already safely in Sheets/Drive.
+  function sendTelegramNotification(payload, files) {
+    return getTelegramConfig()
+      .then(function (config) {
+        if (!config.botToken || !config.chatIds || !config.chatIds.length) return;
+
+        function truncate(str, n) {
+          str = String(str || "");
+          return str.length > n ? str.slice(0, n).trim() + "…" : str;
+        }
+
+        var caption = [
+          "💌 <b>New Boyfriend Application</b>",
+          "",
+          "👤 " + escapeHtml(payload.full_name) + ", " + escapeHtml(payload.age) + " · 📍 " + escapeHtml(payload.city),
+          "📏 " + escapeHtml(payload.height_cm) + " cm",
+          "📸 " + escapeHtml(payload.instagram),
+          "💼 " + escapeHtml(payload.occupation) + " · 💰 " + escapeHtml(payload.income_usd) + "/mo",
+          "",
+          "🚬 " + escapeHtml(payload.smoke) + "  🍷 " + escapeHtml(payload.drink) + "  👶 Wants kids: " + escapeHtml(payload.wants_kids),
+          "🙏 " + escapeHtml(payload.religious),
+          "",
+          "💬 \"" + escapeHtml(truncate(payload.why_good_match, 140)) + "\"",
+        ].join("\n");
+
+        var photos = [files.portrait, files.fulllength].filter(function (f) { return f && f.size; });
+        var VIDEO_LIMIT = 45 * 1024 * 1024; // stay under Telegram's ~50MB bot upload cap
+
+        var sends = config.chatIds.map(function (chatId) {
+          var chain = Promise.resolve();
+
+          if (photos.length) {
+            chain = chain.then(function () {
+              var form = new FormData();
+              form.append("chat_id", chatId);
+              var media = photos.map(function (file, i) {
+                form.append("photo" + i, file);
+                return {
+                  type: "photo",
+                  media: "attach://photo" + i,
+                  caption: i === 0 ? caption : undefined,
+                  parse_mode: i === 0 ? "HTML" : undefined,
+                };
+              });
+              form.append("media", JSON.stringify(media));
+              return fetch("https://api.telegram.org/bot" + config.botToken + "/sendMediaGroup", {
+                method: "POST",
+                body: form,
+              });
+            });
+          } else {
+            chain = chain.then(function () {
+              return fetch("https://api.telegram.org/bot" + config.botToken + "/sendMessage", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ chat_id: chatId, text: caption, parse_mode: "HTML" }),
+              });
+            });
+          }
+
+          if (files.video && files.video.size) {
+            chain = chain.then(function () {
+              if (files.video.size > VIDEO_LIMIT) {
+                return fetch("https://api.telegram.org/bot" + config.botToken + "/sendMessage", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    chat_id: chatId,
+                    text: "🎥 Video is too large to preview here — see the Drive folder: " + payload.folderLink,
+                    disable_web_page_preview: true,
+                  }),
+                });
+              }
+              var form = new FormData();
+              form.append("chat_id", chatId);
+              form.append("video", files.video);
+              return fetch("https://api.telegram.org/bot" + config.botToken + "/sendVideo", {
+                method: "POST",
+                body: form,
+              });
+            });
+          }
+
+          chain = chain.then(function () {
+            return fetch("https://api.telegram.org/bot" + config.botToken + "/sendMessage", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                chat_id: chatId,
+                text: "📁 Full folder: " + payload.folderLink,
+                disable_web_page_preview: true,
+              }),
+            });
+          });
+
+          return chain;
+        });
+
+        return Promise.all(sends);
+      })
+      .catch(function () {
+        // Telegram is a nice-to-have notification; never fail the submission over it.
+      });
+  }
+
   form.addEventListener("submit", function (e) {
     e.preventDefault();
     clearError();
@@ -566,11 +691,16 @@
       })
       .then(function (res) {
         if (!res.ok) throw new Error("Request failed: " + res.status);
+        sendTelegramNotification(payload, {
+          portrait: portraitFile && portraitFile.size ? portraitFile : null,
+          fulllength: fulllengthFile && fulllengthFile.size ? fulllengthFile : null,
+          video: videoFile && videoFile.size ? videoFile : null,
+        });
         clearDraft();
         showStep(6);
       })
       .catch(function (err) {
-        showError(t("error_generic"));
+        showError(t("error_generic") + " [" + (err && err.message ? err.message : err) + "]");
         submitBtn.disabled = false;
         submitBtn.textContent = t("btn_submit");
       });

@@ -56,24 +56,6 @@ function getGoogleAuth() {
   ]);
 }
 
-async function sendTelegram(text) {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatIds = (process.env.TELEGRAM_CHAT_ID || "")
-    .split(",")
-    .map((id) => id.trim())
-    .filter(Boolean);
-  if (!token || chatIds.length === 0) return;
-  await Promise.all(
-    chatIds.map((chatId) =>
-      fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML", disable_web_page_preview: true }),
-      })
-    )
-  );
-}
-
 module.exports = async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
@@ -87,9 +69,10 @@ module.exports = async (req, res) => {
     const auth = getGoogleAuth();
     const sheets = google.sheets({ version: "v4", auth });
 
-    const applicantName = joinField(body.full_name) || "Unnamed";
-
     // Append a row to the Google Sheet
+    // (Telegram notification now happens client-side — see app.js — so the
+    // photos can be sent directly as a real album without passing through
+    // this size-limited serverless function.)
     const sheetId = process.env.GOOGLE_SHEET_ID;
     const row = [
       new Date().toISOString(),
@@ -106,17 +89,6 @@ module.exports = async (req, res) => {
       insertDataOption: "INSERT_ROWS",
       requestBody: { values: [row] },
     });
-
-    // Notify Telegram
-    const summary = [
-      `<b>New boyfriend application</b>`,
-      `${applicantName} · ${joinField(body.age)} y/o · ${joinField(body.city)}`,
-      `IG: ${joinField(body.instagram)}`,
-      `Occupation: ${joinField(body.occupation)}`,
-      ``,
-      `Photos & video: ${folderLink || "—"}`,
-    ].join("\n");
-    await sendTelegram(summary);
 
     res.status(200).json({ ok: true });
   } catch (err) {
