@@ -716,6 +716,5 @@
   try { savedLang = localStorage.getItem("mm_lang") || "en"; } catch (e) {}
   applyLanguage(savedLang);
 
-  showStep(0);
   restoreDraft();
 })();
